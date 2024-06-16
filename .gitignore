@@ -3,3 +3,8 @@ fish
 *.txt
 *.pdf
 *.code-workspace
+*.aux
+*latexmk
+*.log
+*.fls
+*synctex.gz

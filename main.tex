@@ -1,0 +1,47 @@
+\documentclass{article}
+\usepackage{geometry}[a4paper, margin=1in]
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{verbatim}
+
+\title{Algorithms for Uncertainty Quantification\\
+Bonus Assignment 2}
+\author{Onur Yılmaz, 03764831 \\Zafer Bora Yılmazer, 03782277 }
+\date{May 2024}
+
+\begin{document}
+
+\maketitle
+
+\section{Lagrange Interpolation}
+placeholder
+
+\section{Orthogonal Polynomials}
+\subsection{Orthogonal Check by Expectation Value}
+By definition of the expectation of a continuous random variable (in our case $\rho$), the expected value is 
+\begin{equation}
+    \mathbb{E}[\phi_i(x)\cdot\phi_j(x)] = \int_{-\infty}^\infty\phi_i(x)\phi_j(x)\rho(x)dx
+\end{equation}
+From the definition of orthogonality of two polynomials, two polynomials are orthogonal if 
+\begin{equation}
+    \int_{-\infty}^\infty\phi_i(x)\phi_j(x)\rho(x)dx = \left\langle\phi_i(x), \phi_j(x)\right\rangle _\rho\delta_{ij}
+\end{equation}
+Therefore, after combining the two equations we get 
+\begin{equation}
+    \mathbb{E}[\phi_i(x)\cdot\phi_j(x)] = \left\langle\phi_i(x), \phi_j(x)\right\rangle _\rho\delta_{ij}
+\end{equation}
+which yields the following insights:
+\begin{itemize}
+    \item Expected value returns a non-zero value only if $i=j$ due to Kronecker delta.
+    \item If the expected value is zero for all other $i$ and $j$ combinations, orthogonality between the two 
+    polynomials is revealed.
+    \item If the expected value is 1, one can say that the polynomials are orthonormal since 
+    \[\int_{-\infty}^\infty\phi_i(x)\phi_j(x)\rho(x)dx = \delta_{ij}\] is satisfied only if the two polynomials are 
+    orthonormal. For all other non-zero values, it can be deduced that the polynomials are orthogonal.
+\end{itemize}
+
+\subsection{Orthonormal Polynomial Generation}
+\end{document}
