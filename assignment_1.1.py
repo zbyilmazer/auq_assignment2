@@ -71,15 +71,16 @@ if __name__ == '__main__':
     y1  = 0.
 
     # w is no longer deterministic
-    w_left      = None
-    w_right     = None
+    w_left      = 0.95
+    w_right     = 1.05
     stat_ref    = [-0.43893703, 0.00019678]
 
     # create uniform distribution object
+    uniform_dist = cp.Uniform(w_left, w_right)
 
     # no of samples from Monte Carlo sampling
-    no_samples_vec = None
-    no_grid_points_vec = []
+    no_samples_vec = [10, 100, 1000, 10000]
+    no_grid_points_vec = [2, 5, 10, 20]
 
     # time domain setup
     t_max       = 10.
@@ -92,14 +93,47 @@ if __name__ == '__main__':
     init_cond   = y0, y1
 
     # create vectors to contain the expectations and variances and runtimes
+    expectations    = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
+    variances       = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
+    runtimes        = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
+    mc_expectations = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
+    mc_variances    = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
+    mc_runtimes     = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
 
     # compute relative error
     relative_err = lambda approx, real: abs(1. - approx/real)
 
+    # fix seed
+    np.random.seed(1234)
+
     # perform Monte Carlo sampling
-    for j, no_grid_points in enumerate(no_grid_points_vec):
-        # a) Create the interpolant and evaluate the integral on the lagrange interpolant using MC
-        # b) Evaluate the integral directly using MC
-        # c) compute expectation and variance and measure runtime
+for j, no_grid_points in enumerate(no_grid_points_vec):
+        # Generate Chebyshev nodes and corresponding function evaluations
+        nodes = np.cos((2 * np.arange(1, no_grid_points + 1) - 1) / (2.0 * no_grid_points) * np.pi)
+        function_values = np.array([discretize_oscillator_odeint(model, atol, rtol, init_cond, (c, k, f, omega), t, t_interest) for omega in nodes])
+        weights = compute_barycentric_weights(nodes)
 
+        for k, no_samples in enumerate(no_samples_vec):
+            # a) Create the interpolant and evaluate the integral on the Lagrange interpolant using MC
+            start_time = time.time()
+            samples = uniform_dist.sample(no_samples)
+            interpolated_values = np.array([barycentric_interp(omega, nodes, weights, function_values) for omega in samples])
+            expectations[j, k] = np.mean(interpolated_values)
+            variances[j, k] = np.var(interpolated_values)
+            runtimes[j, k] = time.time() - start_time
 
+            # b) Evaluate the integral directly using MC
+            start_time = time.time()
+            mc_samples = uniform_dist.sample(no_samples)
+            mc_values = np.array([discretize_oscillator_odeint(model, atol, rtol, init_cond, (c, k, f, omega), t, t_interest) for omega in mc_samples])
+            mc_expectations[j, k] = np.mean(mc_values)
+            mc_variances[j, k] = np.var(mc_values)
+            mc_runtimes[j, k] = time.time() - start_time
+
+            # c) Compute expectation and variance and measure runtime
+            print(f'Grid Points: {no_grid_points}, Samples: {no_samples}')
+            print(f'Interpolant Expectation: {expectations[j, k]}, Variance: {variances[j, k]}, Runtime: {runtimes[j, k]}')
+            print(f'MC Expectation: {mc_expectations[j, k]}, Variance: {mc_variances[j, k]}, Runtime: {mc_runtimes[j, k]}')
+            print(f'Relative Error in Expectation: {relative_err(expectations[j, k], stat_ref[0])}, MC: {relative_err(mc_expectations[j, k], stat_ref[0])}')
+            print(f'Relative Error in Variance: {relative_err(variances[j, k], stat_ref[1])}, MC: {relative_err(mc_variances[j, k], stat_ref[1])}')
+            print('-' * 50)

@@ -2,3 +2,4 @@ fish
 .micromamba
 *.txt
 *.pdf
+*.code-workspace
