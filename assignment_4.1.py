@@ -49,7 +49,7 @@ if __name__ == '__main__':
     w_right     = 1.05
 
     # create uniform distribution object
-    distr_w = None
+    distr_w = cp.Uniform(w_left, w_right)
 
     # the truncation order of the polynomial chaos expansion approximation
     N = [1, 2, 3, 4, 5, 6]
@@ -64,18 +64,35 @@ if __name__ == '__main__':
     var_cp = np.zeros(len(N))
 
     # perform polynomial chaos approximation + the pseudo-spectral
-    for h in xrange(len(N)):
+    for h in range(len(N)):
 
         # create N[h] orthogonal polynomials using chaospy
-        poly            = None
+        poly = cp.generate_expansion(N[h], distr_w, normed=True)
         # create K[h] quadrature nodes using chaospy
-        nodes, weights  = None
+        nodes, weights = cp.generate_quadrature(K[h], distr_w, rule='G')
 
         # perform polynomial chaos approximation + the pseudo-spectral approach manually
+        gpc_coeff = np.zeros((N[h], 2))
+        for i in range(N[h]):
+            for k in range(K[h]):
+                p = (c, k, f, nodes[k])
+                y = discretize_oscillator_odeint(model, atol, rtol, init_cond, p, t, t_interest)
+                gpc_coeff[i] += y * weights[k] * poly[i](nodes[k])
+
+        # compute statistics using gPC coefficients
+        exp_m[h] = gpc_coeff[0, 0]
+        var_m[h] = np.sum(gpc_coeff[1:, 0]**2)
 
         # perform polynomial chaos approximation + the pseudo-spectral approach using chaospy
+        y_gpc = np.zeros(K[h])
+        for k in range(K[h]):
+            p = (c, k, f, nodes[k])
+            y_gpc[k] = discretize_oscillator_odeint(model, atol, rtol, init_cond, p, t, t_interest)
         
-    
+        gpc_model = cp.fit_quadrature(poly, nodes, weights, y_gpc)
+        exp_cp[h] = cp.E(gpc_model, distr_w)
+        var_cp[h] = cp.Var(gpc_model, distr_w)
+
     print('MEAN')
     print("K | N | Manual \t\t\t| ChaosPy")
     for h in range(len(N)):
@@ -85,4 +102,3 @@ if __name__ == '__main__':
     print("K | N | Manual \t\t| ChaosPy")
     for h in range(len(N)):
         print(K[h], '|', N[h], '|', "{a:1.12f}".format(a=var_m[h]), '\t|', "{a:1.12f}".format(a=var_cp[h]))
-
