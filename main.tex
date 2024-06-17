@@ -113,4 +113,47 @@ with very small order of magnitudes, possibly due to floating point calculations
 the normal distribution, where the value is the largest among other elements in the row but still not equal to 1. It can
 be attributed to the same reason that there is more non-zero off-diagonal entries in the normal distribution case, yet
 we cannot tell the exact reason why.
+
+\section{Probabilistic Colocation}
+For fixed $t$, we can show the given mean equality $\mathbb{E}[f(t,\omega)] = \hat{f}_0(t)$ by first showing that 
+\begin{equation}\label{eq:f_to_n}
+    f(t,\omega) \approx f^N(t,\omega) \Rightarrow \mathbb{E}[f(t,\omega)] \approx \mathbb{E}[f^N(t,\omega)]
+\end{equation}
+Replacing the $f^N(t,\omega)$ with its summation form yields
+\begin{equation}
+    \mathbb{E}[f^N(t,\omega)] = \mathbb{E}\left[\sum_{i=0}^{N-1}\hat{f}_i(t)\phi_i(\omega)\right] = \sum_{i=0}^{N-1}\hat{f}_i(t)\mathbb{E}\left[\phi_i(\omega)\right]
+\end{equation}
+since the term $\hat{f}_i(t)$ is a deterministic value under constant $t$ as seen by the equation 6 of the assignment 
+sheet and thus its expected value is equal to itself. Orthonormal polynomials with respect to a 
+probability distribution $\rho$ of $\omega$ has the property that only one of the polynomials $\phi_i(\omega)$ can be
+1 while all the others have to be zero (as shown in the parts 2.1 and 2.2). Therefore all the terms that do not include
+$\phi_0(\omega)$ drop due to them being zero and the summation results in
+\begin{equation}
+    \sum_{i=0}^{N-1}\hat{f}_i(t)\mathbb{E}\left[\phi_i(\omega)\right] = \hat{f}_0(t)\mathbb{E}\left[\phi_0(\omega)\right] = \hat{f}_0(t)
+\end{equation}
+With the above equation, we have shown that $\mathbb{E}[f(t,\omega)] = \hat{f}_0(t)$ is approximately equal to $\hat{f}_0(t)$.
+
+For showing the variance, we can start with the following definition of variance for our case
+\begin{equation}
+    \text{Var}[f(t,\omega)] = \mathbb{E}[f(t, \omega)^2] + \mathbb{E}[f(t,\omega)]^2
+\end{equation}
+By using the same replacement as we did in \ref*{eq:f_to_n}, we can write the following:
+\begin{equation}
+    \text{Var}[f(t,\omega)] = \mathbb{E}\left[\left(\sum_{i=0}^{N-1}\hat{f}_i(t)\phi_i(\omega)\right)^2\right] + \mathbb{E}\left[\sum_{i=0}^{N-1}\hat{f}_i(t)\phi_i(\omega)\right]^2
+\end{equation}
+Second term in the equation above can be found easily from the previously calculated mean as $\hat{f}_0(t)^2$. Focusing
+on the first part of the equation yields
+\begin{equation}
+    \mathbb{E}\left[\left(\sum_{i=0}^{N-1}\hat{f}_i(t)\phi_i(\omega)\right)^2\right] = \sum_{i=0}^{N-1}\sum_{j=0}^{N-1}\hat{f}_i(t)\hat{f}_j(t)\mathbb{E}\left[\phi_i(\omega)\phi_j(\omega)\right]
+\end{equation}
+Due to orthonormality of the polynomials, $\mathbb{E}\left[\phi_i(\omega)\phi_j(\omega)\right] = \delta_{ij}$ which 
+reduces the above equation to
+\begin{equation}
+    \mathbb{E}\left[\left(\sum_{i=0}^{N-1}\hat{f}_i(t)\phi_i(\omega)\right)^2\right] = \sum_{i=0}^{N-1}\hat{f}_i^2(t)
+\end{equation}
+as only the terms with $i=j$ will be in the summation. Combining the equation above and the square of the mean, we 
+obtain 
+\begin{equation}
+    \text{Var}[f(t,\omega)] = \left(\sum_{i=0}^{N-1}\hat{f}_i(t)^2\right) - \hat{f}_0^2(t) = \left(\sum_{i=1}^{N-1}\hat{f}_i^2(t)\right)
+\end{equation}
 \end{document}
