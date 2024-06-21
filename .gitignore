@@ -8,3 +8,4 @@ fish
 *.log
 *.fls
 *synctex.gz
+!main.pdf

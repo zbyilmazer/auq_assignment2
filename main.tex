@@ -18,7 +18,61 @@ Bonus Assignment 2}
 \maketitle
 
 \section{Lagrange Interpolation}
-placeholder
+From our code implementation, we got the following results for relative errors of Lagrange interpolation and direct 
+Monte Carlo sampling and their runtimes respectively for different number of samples and in the case of Lagrange 
+interpolation:
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+    \hline
+    \textbf{M} & \textbf{Expectation Error} & \textbf{Variance Error} & \textbf{Runtime (s)} \\ \hline
+    10 & 0.01978 & 0.66356 & 0.01346 \\ \hline
+    100 & 0.00155 & 0.15514 & 0.12261 \\ \hline
+    1000 & 0.00059 & 0.01892 & 1.20413 \\ \hline
+    10000 & 0.00032 & 0.01878 & 8.29839 \\ \hline
+    \end{tabular}
+    \caption{Direct Monte Carlo errors with N number of interpolation points over M number of samples with corresponding runtimes}
+    \label{table:direct_mc}
+    \end{table}
+    
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        \textbf{N} & \textbf{M} & \textbf{Expectation Error} & \textbf{Variance Error} & \textbf{Runtime (s)} \\ \hline
+        2 & 10 & 0.00943 & 0.90278 & 6.938e-05 \\ \hline
+        2 & 100 & 0.01715 & 0.76255 & 3.891e-04 \\ \hline
+        2 & 1000 & 0.01590 & 0.75875 & 3.292e-03 \\ \hline
+        2 & 10000 & 0.01587 & 0.76042 & 3.134e-02 \\ \hline
+        5 & 10 & 0.01978 & 0.66358 & 9.513e-05 \\ \hline
+        5 & 100 & 0.00155 & 0.15515 & 7.024e-04 \\ \hline
+        5 & 1000 & 0.00059 & 0.01891 & 6.888e-03 \\ \hline
+        5 & 10000 & 0.00032 & 0.01880 & 6.712e-02 \\ \hline
+        10 & 10 & 0.01978 & 0.66356 & 1.428e-04 \\ \hline
+        10 & 100 & 0.00155 & 0.15514 & 1.544e-03 \\ \hline
+        10 & 1000 & 0.00059 & 0.01892 & 1.562e-02 \\ \hline
+        10 & 10000 & 0.00032 & 0.01878 & 1.319e-01 \\ \hline
+        20 & 10 & 0.01978 & 0.66356 & 2.592e-04 \\ \hline
+        20 & 100 & 0.00155 & 0.15514 & 2.446e-03 \\ \hline
+        20 & 1000 & 0.00059 & 0.01892 & 2.426e-02 \\ \hline
+        20 & 10000 & 0.00032 & 0.01878 & 2.373e-01 \\ \hline
+        \end{tabular}
+        \caption{Lagrange Interpolation Errors and Runtimes}
+        \label{table:lagrange_combined}
+        \end{table}
+The values given in the above tables are rounded to 5 decimal digits for viewing, our code also outputs the 
+exact values for each expectation and variance values as well. 
+
+As can be seen from the above tables, Lagrange interpolation methods return almost the same expectation and variance 
+values for same number of samples with the direct Monte Carlo sampling, in significantly less time. For instance 
+in 10000 samples from direct Monte Carlo sampling, execution takes over 8 seconds whereas in Lagrange interpolation 
+case, it takes only 0.2 seconds while virtually obtaining the same values and relative errors with the direct Monte
+Carlo implementation (while not visible on the table, values are marginally different after 8 or 9 digits after
+the decimal point). Only case where visible differences to the variance errors exist for the case of 2 Lagrange 
+interpolation points, where the values are higher than the Monte Carlo sampling for same number of samples M and 
+do not show much improvement with increasing number of samples. However in all other cases with all combinations
+of different interpolation points N and sample points M, values show a similar trend of approaching the reference 
+values with increasing number of samples.
 
 \section{Orthogonal Polynomials}
 \subsection{Orthogonal Check by Expectation Value}

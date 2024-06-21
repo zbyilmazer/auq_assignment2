@@ -76,7 +76,7 @@ if __name__ == '__main__':
     stat_ref    = [-0.43893703, 0.00019678]
 
     # create uniform distribution object
-    uniform_dist = cp.Uniform(w_left, w_right)
+    dist = cp.Uniform(w_left, w_right)
 
     # no of samples from Monte Carlo sampling
     no_samples_vec = [10, 100, 1000, 10000]
@@ -96,44 +96,62 @@ if __name__ == '__main__':
     expectations    = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
     variances       = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
     runtimes        = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
-    mc_expectations = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
-    mc_variances    = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
-    mc_runtimes     = np.zeros((len(no_grid_points_vec), len(no_samples_vec)))
+    mc_expectations = np.zeros(len(no_samples_vec))
+    mc_variances    = np.zeros(len(no_samples_vec))
+    mc_runtimes     = np.zeros(len(no_samples_vec))
 
     # compute relative error
-    relative_err = lambda approx, real: abs(1. - approx/real)
-
-    # fix seed
-    np.random.seed(1234)
+    relative_err = lambda approx, real: abs(1. - approx / real)
 
     # perform Monte Carlo sampling
-for j, no_grid_points in enumerate(no_grid_points_vec):
-        # Generate Chebyshev nodes and corresponding function evaluations
-        nodes = np.cos((2 * np.arange(1, no_grid_points + 1) - 1) / (2.0 * no_grid_points) * np.pi)
-        function_values = np.array([discretize_oscillator_odeint(model, atol, rtol, init_cond, (c, k, f, omega), t, t_interest) for omega in nodes])
-        weights = compute_barycentric_weights(nodes)
+    for j, no_grid_points in enumerate(no_grid_points_vec):
+        # a) Create the interpolant and evaluate the integral on the lagrange interpolant using MC
+        chebyshev_points = 0.5 * (w_left + w_right) + 0.5 * (w_right - w_left) * np.cos((2 * np.arange(1, no_grid_points + 1) - 1) / (2. * no_grid_points) * np.pi)
+        bary_weights = compute_barycentric_weights(chebyshev_points)
 
-        for k, no_samples in enumerate(no_samples_vec):
-            # a) Create the interpolant and evaluate the integral on the Lagrange interpolant using MC
+        func_evals = np.array([discretize_oscillator_odeint(model, atol, rtol, init_cond, [c, k, f, omega], t, t_interest) for omega in chebyshev_points])
+
+        for i, no_samples in enumerate(no_samples_vec):
+            np.random.seed(0)
+            mc_samples = dist.sample(no_samples)
+
             start_time = time.time()
-            samples = uniform_dist.sample(no_samples)
-            interpolated_values = np.array([barycentric_interp(omega, nodes, weights, function_values) for omega in samples])
-            expectations[j, k] = np.mean(interpolated_values)
-            variances[j, k] = np.var(interpolated_values)
-            runtimes[j, k] = time.time() - start_time
+            lagrange_evals = np.array([barycentric_interp(omega, chebyshev_points, bary_weights, func_evals) for omega in mc_samples])
+            end_time = time.time()
 
-            # b) Evaluate the integral directly using MC
-            start_time = time.time()
-            mc_samples = uniform_dist.sample(no_samples)
-            mc_values = np.array([discretize_oscillator_odeint(model, atol, rtol, init_cond, (c, k, f, omega), t, t_interest) for omega in mc_samples])
-            mc_expectations[j, k] = np.mean(mc_values)
-            mc_variances[j, k] = np.var(mc_values)
-            mc_runtimes[j, k] = time.time() - start_time
+            expectations[j, i] = np.mean(lagrange_evals)
+            variances[j, i] = np.var(lagrange_evals)
+            runtimes[j, i] = end_time - start_time
+            print(f"N={no_grid_points}, M={no_samples}: Runtime = {runtimes[j, i]}")
 
-            # c) Compute expectation and variance and measure runtime
-            print(f'Grid Points: {no_grid_points}, Samples: {no_samples}')
-            print(f'Interpolant Expectation: {expectations[j, k]}, Variance: {variances[j, k]}, Runtime: {runtimes[j, k]}')
-            print(f'MC Expectation: {mc_expectations[j, k]}, Variance: {mc_variances[j, k]}, Runtime: {mc_runtimes[j, k]}')
-            print(f'Relative Error in Expectation: {relative_err(expectations[j, k], stat_ref[0])}, MC: {relative_err(mc_expectations[j, k], stat_ref[0])}')
-            print(f'Relative Error in Variance: {relative_err(variances[j, k], stat_ref[1])}, MC: {relative_err(mc_variances[j, k], stat_ref[1])}')
-            print('-' * 50)
+    print("Expectations:", expectations)
+    print("Variances:", variances)
+
+    for i, no_samples in enumerate(no_samples_vec):
+        np.random.seed(0)
+        mc_samples = dist.sample(no_samples)
+
+        start_time = time.time()
+        mc_evals = np.array([discretize_oscillator_odeint(model, atol, rtol, init_cond, [c, k, f, omega], t, t_interest) for omega in mc_samples])
+        end_time = time.time()
+
+        mc_expectations[i] = np.mean(mc_evals)
+        mc_variances[i] = np.var(mc_evals)
+        mc_runtimes[i] = end_time - start_time
+
+    print("Direct MC Expectations:", mc_expectations)
+    print("Direct MC Variances:", mc_variances)
+    print("Direct MC Runtimes:", mc_runtimes)
+
+    # Computing relative errors
+    for j in range(len(no_grid_points_vec)):
+        for i in range(len(no_samples_vec)):
+            exp_error = relative_err(expectations[j, i], stat_ref[0])
+            var_error = relative_err(variances[j, i], stat_ref[1])
+            print(f"N={no_grid_points_vec[j]}, M={no_samples_vec[i]}: Expectation error = {exp_error}, Variance error = {var_error}")
+
+    # Computing relative errors for direct Monte Carlo
+    for i in range(len(no_samples_vec)):
+        exp_error = relative_err(mc_expectations[i], stat_ref[0])
+        var_error = relative_err(mc_variances[i], stat_ref[1])
+        print(f"Direct MC M={no_samples_vec[i]}: Expectation error = {exp_error}, Variance error = {var_error}")
